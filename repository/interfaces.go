@@ -14,4 +14,5 @@ type RepositoryInterface interface {
 	GetUserByPhone(ctx context.Context, phoneNumber string) (output UserTable, err error)
 	GetUserByID(ctx context.Context, id int) (output UserTable, err error)
 	UpsertLoginLog(ctx context.Context, userID int, loginTime time.Time) error
+	UpdateUser(ctx context.Context, user UserTable) error
 }

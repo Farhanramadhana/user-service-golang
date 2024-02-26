@@ -59,3 +59,18 @@ func (r *Repository) UpsertLoginLog(ctx context.Context, userID int, loginTime t
 
 	return err
 }
+
+func (r *Repository) UpdateUser(ctx context.Context, user UserTable) error {
+	query := `
+		UPDATE users
+		SET full_name = $1, phone_number = $2, updated_at = $3
+		WHERE id = $4
+	`
+
+	_, err := r.Db.ExecContext(ctx, query, user.FullName, user.PhoneNumber, time.Now(), user.Id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

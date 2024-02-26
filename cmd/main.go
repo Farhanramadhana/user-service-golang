@@ -22,16 +22,20 @@ func main() {
 		return s.Hello(c)
 	})
 
-	e.POST("/user", func(c echo.Context) error {
-		return s.CreateUser(c)
-	})
-
 	e.POST("/login", func(c echo.Context) error {
 		return s.Login(c)
 	})
 
-	e.POST("/user/profile", func(c echo.Context) error {
+	e.POST("/user", func(c echo.Context) error {
+		return s.CreateUser(c)
+	})
+
+	e.GET("/user", func(c echo.Context) error {
 		return s.GetUserProfile(c)
+	}, s.Middleware.AuthenticateMiddleware)
+
+	e.PUT("/user", func(c echo.Context) error {
+		return s.UpdateUserProfile(c)
 	}, s.Middleware.AuthenticateMiddleware)
 
 	port := fmt.Sprintf(":%s", os.Getenv("APP_PORT"))

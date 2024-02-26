@@ -45,7 +45,7 @@ func (s *Server) CreateUser(ctx echo.Context) error {
 	// get user by phone number, if exist return error
 	existingUser, _ := s.Repository.GetUserByPhone(context.TODO(), request.PhoneNumber)
 	if existingUser.Id != 0 {
-		return ctx.JSON(400, model.ResponseMessage{
+		return ctx.JSON(http.StatusBadRequest, model.ResponseMessage{
 			Status:  constant.ERROR,
 			Message: "phone number already exist",
 		})
@@ -65,7 +65,7 @@ func (s *Server) CreateUser(ctx echo.Context) error {
 		return err
 	}
 
-	return ctx.JSON(201, model.ResponseID{
+	return ctx.JSON(http.StatusCreated, model.ResponseID{
 		ID: id,
 	})
 }
@@ -143,6 +143,54 @@ func (s *Server) GetUserProfile(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, response)
+}
+
+func (s *Server) UpdateUserProfile(ctx echo.Context) error {
+	request := new(model.RequestUpdateUser)
+	if err := ctx.Bind(request); err != nil {
+		return ctx.JSON(http.StatusInternalServerError, model.ResponseMessage{
+			Status:  constant.ERROR,
+			Message: err.Error(),
+		})
+	}
+
+	errMessageList, isError := s.validate(request)
+	if isError {
+		return ctx.JSON(http.StatusBadRequest, model.ResponseErrorValidation{
+			Status:           constant.ERROR,
+			ValidationErrors: errMessageList,
+		})
+	}
+
+	userId, _ := strconv.Atoi(ctx.Get("user_id").(string))
+	existingUser, _ := s.Repository.GetUserByID(context.TODO(), userId)
+
+	// get user by phone number, if exist return error
+	if request.PhoneNumber != nil {
+		duplicateUser, _ := s.Repository.GetUserByPhone(context.TODO(), *request.PhoneNumber)
+		if duplicateUser.Id != 0 {
+			return ctx.JSON(http.StatusConflict, model.ResponseMessage{
+				Status:  constant.ERROR,
+				Message: "phone number already exist",
+			})
+		}
+
+		existingUser.PhoneNumber = *request.PhoneNumber
+	}
+
+	if request.FullName != nil {
+		existingUser.FullName = *request.FullName
+	}
+
+	// Save the updated user profile
+	err := s.Repository.UpdateUser(context.TODO(), existingUser)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, model.ResponseMessage{
+			Status:  constant.ERROR,
+			Message: err.Error(),
+		})
+	}
+	return ctx.JSON(http.StatusCreated, request)
 }
 
 func (s *Server) verifyPassword(password, passwordHash string) bool {
