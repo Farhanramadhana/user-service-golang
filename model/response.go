@@ -2,9 +2,13 @@ package model
 
 import "time"
 
-type ResponseError struct {
+type ResponseMessage struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
+}
+
+type ResponseID struct {
+	ID int `json:"id"`
 }
 
 type ResponseErrorValidation struct {

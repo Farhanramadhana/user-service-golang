@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -22,7 +23,7 @@ func (s *Server) Hello(ctx echo.Context) error {
 func (s *Server) CreateUser(ctx echo.Context) error {
 	request := new(model.RequestCreateUser)
 	if err := ctx.Bind(request); err != nil {
-		return ctx.JSON(http.StatusInternalServerError, model.ResponseError{
+		return ctx.JSON(http.StatusInternalServerError, model.ResponseMessage{
 			Status:  constant.ERROR,
 			Message: err.Error(),
 		})
@@ -44,7 +45,7 @@ func (s *Server) CreateUser(ctx echo.Context) error {
 	// get user by phone number, if exist return error
 	existingUser, _ := s.Repository.GetUserByPhone(context.TODO(), request.PhoneNumber)
 	if existingUser.Id != 0 {
-		return ctx.JSON(400, model.ResponseError{
+		return ctx.JSON(400, model.ResponseMessage{
 			Status:  constant.ERROR,
 			Message: "phone number already exist",
 		})
@@ -59,18 +60,20 @@ func (s *Server) CreateUser(ctx echo.Context) error {
 		UpdatedAt:   time.Now(),
 	}
 
-	err = s.Repository.CreateUser(context.TODO(), newUser)
+	id, err := s.Repository.CreateUser(context.TODO(), newUser)
 	if err != nil {
 		return err
 	}
 
-	return ctx.JSON(201, request)
+	return ctx.JSON(201, model.ResponseID{
+		ID: id,
+	})
 }
 
 func (s *Server) Login(ctx echo.Context) error {
 	request := new(model.Credentials)
 	if err := ctx.Bind(request); err != nil {
-		return ctx.JSON(http.StatusInternalServerError, model.ResponseError{
+		return ctx.JSON(http.StatusInternalServerError, model.ResponseMessage{
 			Status:  constant.ERROR,
 			Message: err.Error(),
 		})
@@ -86,7 +89,7 @@ func (s *Server) Login(ctx echo.Context) error {
 
 	userData, err := s.Repository.GetUserByPhone(context.TODO(), request.PhoneNumber)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, model.ResponseError{
+		return ctx.JSON(http.StatusBadRequest, model.ResponseMessage{
 			Status:  constant.ERROR,
 			Message: err.Error(),
 		})
@@ -94,7 +97,7 @@ func (s *Server) Login(ctx echo.Context) error {
 
 	isValid := s.verifyPassword(request.Password, userData.Password)
 	if !isValid {
-		return ctx.JSON(http.StatusBadRequest, model.ResponseError{
+		return ctx.JSON(http.StatusBadRequest, model.ResponseMessage{
 			Status:  constant.ERROR,
 			Message: "wrong password",
 		})
@@ -102,10 +105,16 @@ func (s *Server) Login(ctx echo.Context) error {
 
 	token, err := s.Helper.GenerateToken(userData.Id)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, model.ResponseError{
+		return ctx.JSON(http.StatusBadRequest, model.ResponseMessage{
 			Status:  constant.ERROR,
 			Message: err.Error(),
 		})
+	}
+
+	now := time.Now().UTC()
+	err = s.Repository.UpsertLoginLog(context.TODO(), userData.Id, now)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	return ctx.JSON(http.StatusOK, model.ResponseToken{
@@ -119,7 +128,7 @@ func (s *Server) GetUserProfile(ctx echo.Context) error {
 
 	userData, err := s.Repository.GetUserByID(context.TODO(), id)
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, model.ResponseError{
+		return ctx.JSON(http.StatusInternalServerError, model.ResponseMessage{
 			Status:  constant.ERROR,
 			Message: err.Error(),
 		})
