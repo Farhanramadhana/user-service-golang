@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"userService/handler"
+	"userService/middleware"
 	"userService/repository"
 
 	eng "github.com/go-playground/locales/en"
@@ -23,9 +24,13 @@ func main() {
 		return s.CreateUser(c)
 	})
 
-	e.POST("/login", func(c echo.Context) error{
+	e.POST("/login", func(c echo.Context) error {
 		return s.Login(c)
 	})
+
+	e.POST("/user/profile", func(c echo.Context) error {
+		return s.GetUserProfile(c)
+	}, middleware.AuthenticateMiddleware)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }

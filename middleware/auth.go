@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/labstack/echo/v4"
 )
 
 // Claims structure to hold JWT claims
@@ -17,35 +17,32 @@ type Claims struct {
 }
 
 // AuthenticateMiddleware validates the JWT token in the Authorization header
-func AuthenticateMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authorizationHeader := r.Header.Get("Authorization")
+func AuthenticateMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		authorizationHeader := c.Request().Header.Get("Authorization")
 		if authorizationHeader == "" {
-			http.Error(w, "Authorization header is missing", http.StatusUnauthorized)
-			return
+			return echo.NewHTTPError(http.StatusUnauthorized, "Authorization header is missing")
 		}
 
 		tokenString := strings.Replace(authorizationHeader, "Bearer ", "", 1)
 		if tokenString == "" {
-			http.Error(w, "Invalid token format", http.StatusUnauthorized)
-			return
+			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token format")
 		}
 
 		// Validate JWT
 		claims, err := ValidateJWT(tokenString)
 		if err != nil {
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
-			return
+			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token")
 		}
 
-		r = r.WithContext(context.WithValue(r.Context(), "user_id", claims.Subject))
-		next.ServeHTTP(w, r)
-	})
+		c.Set("user_id", claims.Subject)
+		return next(c)
+	}
 }
 
 // ValidateJWT validates the JWT token
 func ValidateJWT(tokenString string) (*Claims, error) {
-	jwtSecret := os.Getenv("jwt_secret_key")
+	jwtSecret := os.Getenv("JWT_SECRET")
 
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(jwtSecret), nil

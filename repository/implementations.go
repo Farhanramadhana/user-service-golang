@@ -30,3 +30,11 @@ func (r *Repository) GetUserByPhone(ctx context.Context, phoneNumber string) (ou
 	}
 	return
 }
+
+func (r *Repository) GetUserByID(ctx context.Context, id int) (output UserTable, err error) {
+	err = r.Db.QueryRowContext(ctx, "SELECT id, full_name, phone_number, created_at, updated_at FROM users WHERE id = $1", id).Scan(&output.Id, &output.FullName, &output.PhoneNumber, &output.CreatedAt, &output.UpdatedAt)
+	if err != nil {
+		return
+	}
+	return
+}

@@ -11,4 +11,5 @@ import (
 type RepositoryInterface interface {
 	CreateUser(ctx context.Context, userData UserTable) (err error)
 	GetUserByPhone(ctx context.Context, phoneNumber string) (output UserTable, err error)
+	GetUserByID(ctx context.Context, id int) (output UserTable, err error)
 }

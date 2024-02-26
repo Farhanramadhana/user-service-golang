@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"time"
 	"userService/model"
 	"userService/model/constant"
@@ -112,10 +113,33 @@ func (s *Server) Login(ctx echo.Context) error {
 	})
 }
 
+func (s *Server) GetUserProfile(ctx echo.Context) error {
+	idStr := ctx.Get("user_id").(string)
+	id, _ := strconv.Atoi(idStr)
+
+	userData, err := s.Repository.GetUserByID(context.TODO(), id)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, model.ResponseError{
+			Status:  constant.ERROR,
+			Message: err.Error(),
+		})
+	}
+
+	response := model.ResponseGetUser{
+		Id:          userData.Id,
+		FullName:    userData.FullName,
+		PhoneNumber: userData.PhoneNumber,
+		CreatedAt:   userData.CreatedAt,
+		UpdatedAt:   userData.UpdatedAt,
+	}
+
+	return ctx.JSON(http.StatusOK, response)
+}
+
 func (s *Server) verifyPassword(password, passwordHash string) bool {
 	byteHash := []byte(passwordHash)
 	err := bcrypt.CompareHashAndPassword(byteHash, []byte(password))
-	
+
 	return err == nil
 }
 
