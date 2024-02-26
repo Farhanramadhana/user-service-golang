@@ -23,6 +23,10 @@ func main() {
 		return s.CreateUser(c)
 	})
 
+	e.POST("/login", func(c echo.Context) error{
+		return s.Login(c)
+	})
+
 	e.Logger.Fatal(e.Start(":1323"))
 }
 

@@ -5,6 +5,7 @@ services:
       - "8080:1323"
     environment:
       DATABASE_URL: postgres://postgres:postgres@db:5432/sawitpro?sslmode=disable
+      JWT_SECRET: thisissecretkey
     depends_on:
       db:
         condition: service_healthy

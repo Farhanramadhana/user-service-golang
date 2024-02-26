@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"userService/helpers"
 	"userService/repository"
 
 	ut "github.com/go-playground/universal-translator"
@@ -10,6 +11,7 @@ import (
 type Server struct {
 	Translator ut.Translator
 	Validate   *validator.Validate
+	Helper     helpers.Helpers
 	Repository repository.RepositoryInterface
 }
 

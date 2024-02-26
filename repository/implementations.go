@@ -24,7 +24,7 @@ func (r *Repository) CreateUser(ctx context.Context, userData UserTable) (err er
 }
 
 func (r *Repository) GetUserByPhone(ctx context.Context, phoneNumber string) (output UserTable, err error) {
-	err = r.Db.QueryRowContext(ctx, "SELECT id, full_name, phone_number FROM users WHERE phone_number = $1", phoneNumber).Scan(&output.Id, &output.FullName, &output.PhoneNumber)
+	err = r.Db.QueryRowContext(ctx, "SELECT id, full_name, phone_number, password FROM users WHERE phone_number = $1", phoneNumber).Scan(&output.Id, &output.FullName, &output.PhoneNumber, &output.Password)
 	if err != nil {
 		return
 	}

@@ -27,13 +27,8 @@ func (s *Server) CreateUser(ctx echo.Context) error {
 		})
 	}
 
-	if err := s.Validate.Struct(request); err != nil {
-		var errMessageList = make(map[string]interface{})
-
-		for _, err := range err.(validator.ValidationErrors) {
-			errMessageList[err.Field()] = []string{TranslationFn(s.Translator, err)}
-		}
-
+	errMessageList, isError := s.validate(request)
+	if isError {
 		return ctx.JSON(http.StatusBadRequest, model.ResponseErrorValidation{
 			Status:           constant.ERROR,
 			ValidationErrors: errMessageList,
@@ -69,4 +64,70 @@ func (s *Server) CreateUser(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(201, request)
+}
+
+func (s *Server) Login(ctx echo.Context) error {
+	request := new(model.Credentials)
+	if err := ctx.Bind(request); err != nil {
+		return ctx.JSON(http.StatusInternalServerError, model.ResponseError{
+			Status:  constant.ERROR,
+			Message: err.Error(),
+		})
+	}
+
+	errMessageList, isError := s.validate(request)
+	if isError {
+		return ctx.JSON(http.StatusBadRequest, model.ResponseErrorValidation{
+			Status:           constant.ERROR,
+			ValidationErrors: errMessageList,
+		})
+	}
+
+	userData, err := s.Repository.GetUserByPhone(context.TODO(), request.PhoneNumber)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, model.ResponseError{
+			Status:  constant.ERROR,
+			Message: err.Error(),
+		})
+	}
+
+	isValid := s.verifyPassword(request.Password, userData.Password)
+	if !isValid {
+		return ctx.JSON(http.StatusBadRequest, model.ResponseError{
+			Status:  constant.ERROR,
+			Message: "wrong password",
+		})
+	}
+
+	token, err := s.Helper.GenerateToken(userData.Id)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, model.ResponseError{
+			Status:  constant.ERROR,
+			Message: err.Error(),
+		})
+	}
+
+	return ctx.JSON(http.StatusOK, model.ResponseToken{
+		Token: token,
+	})
+}
+
+func (s *Server) verifyPassword(password, passwordHash string) bool {
+	byteHash := []byte(passwordHash)
+	err := bcrypt.CompareHashAndPassword(byteHash, []byte(password))
+	
+	return err == nil
+}
+
+func (s *Server) validate(request interface{}) (errMessageList map[string]interface{}, isError bool) {
+	if err := s.Validate.Struct(request); err != nil {
+		errMessageList = make(map[string]interface{})
+		isError = true
+		for _, err := range err.(validator.ValidationErrors) {
+			errMessageList[err.Field()] = []string{TranslationFn(s.Translator, err)}
+		}
+		return
+	}
+
+	return
 }
