@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"userService/handler"
+	"userService/helpers"
 	"userService/middleware"
 	"userService/repository"
 
@@ -30,7 +31,7 @@ func main() {
 
 	e.POST("/user/profile", func(c echo.Context) error {
 		return s.GetUserProfile(c)
-	}, middleware.AuthenticateMiddleware)
+	}, s.Middleware.AuthenticateMiddleware)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }
@@ -45,10 +46,15 @@ func newServer() *handler.Server {
 	uni := ut.New(en, en)
 	translator, _ := uni.GetTranslator("en")
 
+	helper := helpers.NewHelper()
+	middleware := middleware.NewMiddleware(helper)
+
 	validate := handler.NewValidator(translator)
 	opts := handler.NewServerOptions{
 		Translator: translator,
 		Validate:   validate,
+		Helper:     helper,
+		Middleware: middleware,
 		Repository: repo,
 	}
 
