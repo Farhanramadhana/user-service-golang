@@ -6,6 +6,8 @@ import (
 	"userService/handler"
 	"userService/repository"
 
+	eng "github.com/go-playground/locales/en"
+	ut "github.com/go-playground/universal-translator"
 	"github.com/labstack/echo/v4"
 )
 
@@ -29,8 +31,17 @@ func newServer() *handler.Server {
 	var repo repository.RepositoryInterface = repository.NewRepository(repository.NewRepositoryOptions{
 		Dsn: dbDsn,
 	})
+
+	en := eng.New()
+	uni := ut.New(en, en)
+	translator, _ := uni.GetTranslator("en")
+
+	validate := handler.NewValidator(translator)
 	opts := handler.NewServerOptions{
+		Translator: translator,
+		Validate:   validate,
 		Repository: repo,
 	}
+
 	return handler.NewServer(opts)
 }

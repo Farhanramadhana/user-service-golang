@@ -6,11 +6,6 @@ type ResponseError struct {
 }
 
 type ResponseErrorValidation struct {
-	Status           string            `json:"status"`
-	ValidationErrors []ValidationError `json:"errors"`
-}
-
-type ValidationError struct {
-	FieldName    string `json:"field_name"`
-	ErrorMessage string `json:"error"`
+	Status           string      `json:"status"`
+	ValidationErrors interface{} `json:"errors"`
 }
