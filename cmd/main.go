@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"userService/handler"
@@ -33,7 +34,8 @@ func main() {
 		return s.GetUserProfile(c)
 	}, s.Middleware.AuthenticateMiddleware)
 
-	e.Logger.Fatal(e.Start(":1323"))
+	port := fmt.Sprintf(":%s", os.Getenv("APP_PORT"))
+	e.Logger.Fatal(e.Start(port))
 }
 
 func newServer() *handler.Server {
