@@ -4,8 +4,11 @@
 // interfaces using mockgen. See the Makefile for more information.
 package repository
 
-import "context"
+import (
+	"context"
+)
 
 type RepositoryInterface interface {
+	CreateUser(ctx context.Context, userData UserTable) (err error)
 	GetUserByPhone(ctx context.Context, phoneNumber string) (output UserTable, err error)
 }
