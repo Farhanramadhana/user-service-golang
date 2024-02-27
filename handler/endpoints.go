@@ -11,7 +11,7 @@ import (
 	"userService/repository"
 
 	validator "github.com/go-playground/validator/v10"
-	"github.com/labstack/echo/v4"
+	echo "github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -182,6 +182,8 @@ func (s *Server) UpdateUserProfile(ctx echo.Context) error {
 		existingUser.FullName = *request.FullName
 	}
 
+	existingUser.UpdatedAt = time.Now()
+
 	// Save the updated user profile
 	err := s.Repository.UpdateUser(context.TODO(), existingUser)
 	if err != nil {
@@ -190,7 +192,15 @@ func (s *Server) UpdateUserProfile(ctx echo.Context) error {
 			Message: err.Error(),
 		})
 	}
-	return ctx.JSON(http.StatusCreated, request)
+
+	response := model.ResponseGetUser{
+		Id:          existingUser.Id,
+		FullName:    existingUser.FullName,
+		PhoneNumber: existingUser.PhoneNumber,
+		CreatedAt:   existingUser.CreatedAt,
+		UpdatedAt:   existingUser.UpdatedAt,
+	}
+	return ctx.JSON(http.StatusCreated, response)
 }
 
 func (s *Server) verifyPassword(password, passwordHash string) bool {

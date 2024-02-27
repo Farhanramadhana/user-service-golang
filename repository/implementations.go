@@ -67,7 +67,7 @@ func (r *Repository) UpdateUser(ctx context.Context, user UserTable) error {
 		WHERE id = $4
 	`
 
-	_, err := r.Db.ExecContext(ctx, query, user.FullName, user.PhoneNumber, time.Now(), user.Id)
+	_, err := r.Db.ExecContext(ctx, query, user.FullName, user.PhoneNumber, user.UpdatedAt, user.Id)
 	if err != nil {
 		return err
 	}
