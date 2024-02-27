@@ -15,11 +15,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (s *Server) Hello(ctx echo.Context) error {
-	resp := "Hello World!"
-	return ctx.JSON(http.StatusOK, resp)
-}
-
 func (s *Server) CreateUser(ctx echo.Context) error {
 	request := new(model.RequestCreateUser)
 	if err := ctx.Bind(request); err != nil {

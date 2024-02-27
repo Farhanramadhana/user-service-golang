@@ -18,10 +18,6 @@ func main() {
 	e := echo.New()
 	s := newServer()
 
-	e.GET("/", func(c echo.Context) error {
-		return s.Hello(c)
-	})
-
 	e.POST("/login", func(c echo.Context) error {
 		return s.Login(c)
 	})
