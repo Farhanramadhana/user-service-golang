@@ -28,6 +28,7 @@ Before we begin, please follow these steps:
 2. Generate a private and public RSA key pair using the following commands:
 
 a. openssl genrsa -out jwtRSA256-private.pem 2048
+
 b. openssl rsa -in jwtRSA256-private.pem -pubout -outform PEM -out jwtRSA256-public.pem
 
 Note: please generate on PKCS8 format, for testing purpose, the key can generate online from https://acte.ltd/utils/openssl
