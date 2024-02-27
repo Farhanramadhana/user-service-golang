@@ -1,58 +1,112 @@
-# This is the OpenAPI specification for your service. It is used to generate the client code.
-# To generate the server code, use the Gradle task `openApiGenerate`. The 
-# generated code will be placed in `build/generate-resources/main`.
-#
-# We will evaluate you based on how well you design your API.
-# 1. How well it follows REST principles.
-# 2. How easy it is to understand and use.
-#
-# References
-# 1. https://swagger.io/specification/
-openapi: "3.0.0"
+openapi: 3.0.0
 info:
+  title: User Service API
   version: 1.0.0
-  title: User Service
-  license:
-    name: MIT
-servers:
-  - url: http://localhost
 paths:
-  /hello:
+  /user:
     get:
-      summary: This is just a test endpoint to get you started. Please delete this endpoint.
-      operationId: hello
-      parameters:
-        - name: id
-          in: query
-          required: true
-          schema:
-            type: integer
+      summary: Get user information
+      security:
+        - BearerAuth: []
       responses:
         '200':
-          description: Test return
-          content:
-            application/json:    
-              schema:
-                $ref: "#/components/schemas/HelloResponse"
-        '404':
-          description: Not found
+          description: Successful response
           content:
             application/json:
+              example:
+                id: 1
+                full_name: "John Doe"
+                phone_number: "+123456789"
+                created_at: "2024-02-26T12:34:56Z"
+                updated_at: "2024-02-26T12:34:56Z"
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/ResponseGetUser"
+    post:
+      summary: Create a new user
+      requestBody:
+        content:
+          application/json:
+            example:
+              full_name: "farhan"
+              phone_number: "+123456789"
+              password: "Password123@"
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              example:
+                id: 123
+              schema:
+                $ref: "#/components/schemas/ResponseID"
+    put:
+      summary: Update user information
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            example:
+              phone_number: "+987654321"
+      responses:
+        '200':
+          description: User information updated successfully
+          content:
+            application/json:
+              example:
+                id: 1
+                full_name: "Updated Name"
+                phone_number: "+987654321"
+                created_at: "2024-02-26T12:34:56Z"
+                updated_at: "2024-02-26T13:45:00Z"
+              schema:
+                $ref: "#/components/schemas/ResponseGetUser"
+  /login:
+    post:
+      summary: User login
+      requestBody:
+        content:
+          application/json:
+            example:
+              phone_number: "+123456789"
+              password: "Password123@"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              example:
+                token: "your_jwt_token_here"
+              schema:
+                $ref: "#/components/schemas/ResponseToken"
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
   schemas:
-    HelloResponse:
+    ResponseGetUser:
       type: object
-      required:
-        - message
       properties:
-        message:
+        id:
+          type: integer
+        full_name:
           type: string
-    ErrorResponse:
+        phone_number:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ResponseID:
       type: object
-      required:
-        - message
       properties:
-        message:
+        id:
+          type: integer
+    ResponseToken:
+      type: object
+      properties:
+        token:
           type: string
