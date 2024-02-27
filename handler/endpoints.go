@@ -133,8 +133,6 @@ func (s *Server) GetUserProfile(ctx echo.Context) error {
 		Id:          userData.Id,
 		FullName:    userData.FullName,
 		PhoneNumber: userData.PhoneNumber,
-		CreatedAt:   userData.CreatedAt,
-		UpdatedAt:   userData.UpdatedAt,
 	}
 
 	return ctx.JSON(http.StatusOK, response)
@@ -192,8 +190,6 @@ func (s *Server) UpdateUserProfile(ctx echo.Context) error {
 		Id:          existingUser.Id,
 		FullName:    existingUser.FullName,
 		PhoneNumber: existingUser.PhoneNumber,
-		CreatedAt:   existingUser.CreatedAt,
-		UpdatedAt:   existingUser.UpdatedAt,
 	}
 	return ctx.JSON(http.StatusCreated, response)
 }

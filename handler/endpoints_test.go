@@ -106,3 +106,102 @@ func TestLogin(t *testing.T) {
 		}
 	}
 }
+
+func TestGetUserProfile(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := repository.NewMockRepositoryInterface(ctrl)
+	mockHelper := helpers.NewMockHelperInterface(ctrl)
+
+	req := httptest.NewRequest(http.MethodGet, "/user", strings.NewReader(""))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+	rec := httptest.NewRecorder()
+
+	echoContext := echo.New()
+	mockCtx := echoContext.NewContext(req, rec)
+
+	en := eng.New()
+	uni := ut.New(en, en)
+	translator, _ := uni.GetTranslator("en")
+	validate := NewValidator(translator)
+	server := Server{
+		Repository: mockRepo,
+		Validate:   validate,
+		Helper:     mockHelper,
+	}
+
+	mockCtx.Set("user_id", "1")
+	mockRepo.EXPECT().GetUserByID(gomock.Any(), gomock.Any()).Return(repository.UserTable{
+		Id:          1,
+		FullName:    "example",
+		PhoneNumber: "+62123456789",
+	}, nil)
+
+	err := server.GetUserProfile(mockCtx)
+	if assert.NoError(t, err) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+		var userResponse model.ResponseGetUser
+		err := json.Unmarshal(rec.Body.Bytes(), &userResponse)
+
+		if assert.NoError(t, err) {
+			assert.Equal(t, model.ResponseGetUser{
+				Id:          1,
+				FullName:    "example",
+				PhoneNumber: "+62123456789",
+			}, userResponse)
+		}
+	}
+}
+
+func TestUpdateUserProfilet(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := repository.NewMockRepositoryInterface(ctrl)
+	mockHelper := helpers.NewMockHelperInterface(ctrl)
+
+	req := httptest.NewRequest(http.MethodPut, "/user", strings.NewReader(`{"phone_number":"+62812345612","full_name":"name update"}`))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+	rec := httptest.NewRecorder()
+
+	echoContext := echo.New()
+	mockCtx := echoContext.NewContext(req, rec)
+
+	en := eng.New()
+	uni := ut.New(en, en)
+	translator, _ := uni.GetTranslator("en")
+	validate := NewValidator(translator)
+	server := Server{
+		Repository: mockRepo,
+		Validate:   validate,
+		Helper:     mockHelper,
+	}
+
+	mockCtx.Set("user_id", "1")
+	mockRepo.EXPECT().GetUserByID(gomock.Any(), gomock.Any()).Return(repository.UserTable{
+		Id:          1,
+		FullName:    "example",
+		PhoneNumber: "+62123456789",
+	}, nil)
+
+	mockRepo.EXPECT().GetUserByPhone(gomock.Any(), gomock.Any()).Return(repository.UserTable{Id: 0}, nil)
+	mockRepo.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
+
+	err := server.UpdateUserProfile(mockCtx)
+	if assert.NoError(t, err) {
+		assert.Equal(t, http.StatusCreated, rec.Code)
+		var userResponse model.ResponseGetUser
+		err := json.Unmarshal(rec.Body.Bytes(), &userResponse)
+
+		if assert.NoError(t, err) {
+			assert.Equal(t, model.ResponseGetUser{
+				Id:          1,
+				FullName:    "name update",
+				PhoneNumber: "+62812345612",
+			}, userResponse)
+		}
+	}
+}
